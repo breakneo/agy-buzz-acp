@@ -26,11 +26,14 @@ async function main() {
     return;
   }
   if (args[0] === 'models' || args[0] === '--models') {
-    const { listModels, modelConfigOptions } = await import('../src/models.js');
+    const { listModels, modelConfigOptions, FALLBACK_MODELS } = await import('../src/models.js');
     const agy = await resolveExecutable({ name: 'agy', env: process.env });
     if (!agy) throw new Error('Antigravity executable not found; run setup or configure AGY_COMMAND');
-    const models = await listModels({ command: agy.path, cwd: process.cwd(),
+    let models = await listModels({ command: agy.path, cwd: process.cwd(), timeoutMs: 15000,
       prefixArgs: process.env.AGY_FAKE_SCRIPT ? [process.env.AGY_FAKE_SCRIPT] : [] });
+    if (!Array.isArray(models) || models.length === 0) {
+      models = [...FALLBACK_MODELS];
+    }
     const currentModelId = process.env.AGY_MODEL || 'gemini-3.8-flash-high';
     if (!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(currentModelId)) throw new Error('AGY_MODEL must be a valid model identifier');
     process.stdout.write(`${JSON.stringify({ agent: { name: 'agy-buzz-acp', version },
