@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 
 const MODEL_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024;
 
 function validModelRow(modelId, name) {
@@ -28,8 +28,8 @@ function parseModelOutput(output) {
 
 export function listModels({ command = 'agy', cwd = process.cwd(), prefixArgs = [],
   spawnFn = spawn, timeoutMs = DEFAULT_TIMEOUT_MS, maxOutputBytes = DEFAULT_MAX_OUTPUT_BYTES } = {}) {
-  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000) {
-    throw new TypeError('timeoutMs must be between 1 and 10000');
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000) {
+    throw new TypeError('timeoutMs must be between 1 and 30000');
   }
   if (!Number.isInteger(maxOutputBytes) || maxOutputBytes < 1 || maxOutputBytes > 1024 * 1024) {
     throw new TypeError('maxOutputBytes must be a bounded positive integer');
