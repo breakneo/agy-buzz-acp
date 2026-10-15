@@ -82,6 +82,8 @@ agy-buzz-acp models
 
 This command queries the official `agy models` catalog and returns JSON usable by Buzz's model probe. Unlike `setup` and the default doctor, it can contact the provider using agy's existing authentication. It does not start a conversation, log in, or publish a message. Requests have bounded time and output; raw provider diagnostics are not printed.
 
+The catalog probe waits up to 15 seconds by default to accommodate slower provider responses. Programmatic callers can select a timeout up to 30 seconds. Doctor keeps its separate, shorter diagnostic deadline.
+
 New ACP sessions expose the available models as select configuration options. The initial model remains `AGY_MODEL`, or `gemini-3.8-flash-high` by default. A client may choose an offered model with `session/set_config_option` before the first prompt. After a prompt starts, changing the model requires a new conversation. The adapter never resets an existing conversation to accommodate a model switch.
 
 Persisted conversations retain their model scope. Selecting a different model cannot restore old state under that new model; follow the explicit fresh-conversation procedure below if that is what you intend.
@@ -177,6 +179,10 @@ Authentication remains entirely in the official CLI. This package neither extrac
 - [Buzz's standalone-adapter guidance](https://github.com/block/buzz/issues/2393#issuecomment-5097071833)
 
 MIT license. See [LICENSE](LICENSE).
+
+## Contributors
+
+- [Break (@breakneo)](https://github.com/breakneo) investigated slow model discovery on macOS and contributed the longer catalog timeout and executable entrypoint permissions in [PR #22](https://github.com/ironlegends/agy-buzz-acp/pull/22).
 
 ## Operational diagnostics and upgrades
 

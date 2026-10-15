@@ -52,6 +52,22 @@ test('returns no catalog when stdout reports an error', async () => {
   assert.equal(failing.killCalls, 1);
 });
 
+test('accepts longer bounded discovery timeouts and rejects values outside the limit', async () => {
+  for (const timeoutMs of [15_000, 30_000]) {
+    const spawned = child();
+    const pending = listModels({ timeoutMs, spawnFn: () => spawned });
+    spawned.stdout.emit('data', 'fixture-model\tFixture Model\n');
+    spawned.emit('close', 0);
+    assert.deepEqual(await pending, [{ modelId: 'fixture-model', name: 'Fixture Model' }]);
+    assert.equal(spawned.killCalls, 0);
+  }
+  for (const timeoutMs of [0, -1, 30_001, 1.5, NaN]) {
+    assert.throws(() => listModels({ timeoutMs, spawnFn: () => {
+      assert.fail('invalid timeout must not start the provider');
+    } }), TypeError);
+  }
+});
+
 test('builds a stable model select with Buzz aliases', () => {
   assert.deepEqual(modelConfigOptions([
     { modelId: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)' },

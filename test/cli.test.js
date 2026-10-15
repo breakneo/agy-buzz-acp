@@ -8,14 +8,15 @@ import { join } from 'node:path';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const entry = join(root, 'bin', 'agy-buzz-acp.js');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-function run(args, input = '') {
+function run(args, input = '', envOverrides = {}) {
   return spawnSync(process.execPath, [entry, ...args], {
     cwd: root, input, encoding: 'utf8', timeout: 15000, shell: false,
     env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot,
       HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE,
       AGY_COMMAND: process.execPath, BUZZ_CLI_COMMAND: process.execPath,
       AGY_FAKE_SCRIPT: join(root, 'fixtures', 'fake-models.js'),
-      AGY_MODEL: 'gemini-test-high', BUZZ_PRIVATE_KEY: 'synthetic-never-print' }
+      AGY_MODEL: 'gemini-test-high', BUZZ_PRIVATE_KEY: 'synthetic-never-print',
+      ...envOverrides }
   });
 }
 
@@ -50,6 +51,29 @@ test('CLI models exposes the provider catalog in the Buzz probe shape', () => {
   assert.deepEqual(catalog.unstable.availableModels.map(model => model.modelId), ['gemini-test-high', 'claude-test']);
   assert.equal(catalog.stable.configOptions[0].category, 'model');
   assert.equal(result.stdout.includes('synthetic-never-print'), false);
+});
+
+test('CLI model probes preserve the configured model without inventing a failed catalog', () => {
+  for (const command of ['models', '--models']) {
+    for (const mode of ['empty', 'failure', 'malformed']) {
+      const result = run([command], '', { FAKE_MODELS_MODE: mode });
+      assert.equal(result.status, 0, result.stderr);
+      const catalog = JSON.parse(result.stdout);
+      assert.equal(catalog.unstable.currentModelId, 'gemini-test-high');
+      assert.deepEqual(catalog.unstable.availableModels, [], `${command}: ${mode}`);
+      assert.deepEqual(catalog.stable.configOptions, [], `${command}: ${mode}`);
+      assert.equal(result.stdout.includes('synthetic-private-catalog-error'), false);
+      assert.equal(result.stderr, '');
+    }
+  }
+});
+
+test('CLI model discovery accepts a catalog that takes longer than five seconds', () => {
+  const result = run(['models'], '', { FAKE_MODELS_MODE: 'slow' });
+  assert.equal(result.status, 0, result.stderr);
+  const catalog = JSON.parse(result.stdout);
+  assert.deepEqual(catalog.unstable.availableModels.map(model => model.modelId), ['gemini-test-high', 'claude-test']);
+  assert.equal(catalog.stable.configOptions[0].options.length, 2);
 });
 
 test('CLI rejects unsupported commands without starting an ACP session', () => {

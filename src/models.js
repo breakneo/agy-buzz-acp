@@ -4,15 +4,6 @@ const MODEL_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 const DEFAULT_TIMEOUT_MS = 15000;
 const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024;
 
-export const FALLBACK_MODELS = Object.freeze([
-  { modelId: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)' },
-  { modelId: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)' },
-  { modelId: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)' },
-  { modelId: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6 (Thinking)' },
-  { modelId: 'claude-opus-4-6-thinking', name: 'Claude Opus 4.6 (Thinking)' },
-  { modelId: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)' }
-]);
-
 function validModelRow(modelId, name) {
   return typeof modelId === 'string' && MODEL_ID_RE.test(modelId) &&
     typeof name === 'string' && name.trim().length > 0 && name.length <= 512 &&
